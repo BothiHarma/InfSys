@@ -23,19 +23,17 @@ def load_from_excel(file_path_or_buffer) -> List[List[int]]:
         Матрица обработки размером n x m.
     """
     try:
-        # Читаем без заголовков, чтобы не зависеть от их наличия
         df = pd.read_excel(file_path_or_buffer, header=None, dtype=str)
     except Exception as e:
         raise ValueError(f"Не удалось прочитать Excel-файл: {e}")
 
-    # Удаляем пустые строки и столбцы
+    # удаляем пустые строки и столбцы
     df.dropna(how='all', inplace=True)
     df.dropna(axis=1, how='all', inplace=True)
 
     if df.empty:
         raise ValueError("Файл пуст или не содержит данных.")
 
-    # Преобразуем в целые числа
     try:
         df = df.astype(int)
     except ValueError as e:
