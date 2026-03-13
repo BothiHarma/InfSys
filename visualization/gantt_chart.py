@@ -20,33 +20,55 @@ def _create_color_map(job_ids: List[str], palette: str = "plotly") -> Dict[str, 
     n = len(job_ids)
     sorted_jobs = sorted(job_ids)
     
-    if palette == "russian_flag":        
-        colors_rgb = [
-            (192, 192, 192),  # серебристый 
-            (0, 57, 166),      # синий
-            (213, 43, 30)      # красный
-        ]
+    if palette == "russian_flag":
+        # Базовые цвета флага
+        silver = (192, 192, 192)   # серебристый
+        blue = (0, 57, 166)         # синий
+        red = (213, 43, 30)         # красный
         
         color_array = []
+        
+        # Делим на 3 равные части
+        part_size = n // 3
+        remainder = n % 3
+        
+        # Определяем границы частей
+        part1_end = part_size + (1 if remainder > 0 else 0)
+        part2_end = part1_end + part_size + (1 if remainder > 1 else 0)
+        # part3_end = n
+        
         for i in range(n):
-            t = i / max(1, n - 1)
-            
-            if t <= 0.5:
-                t_local = t * 2
-                r = int(colors_rgb[0][0] * (1 - t_local) + colors_rgb[1][0] * t_local)
-                g = int(colors_rgb[0][1] * (1 - t_local) + colors_rgb[1][1] * t_local)
-                b = int(colors_rgb[0][2] * (1 - t_local) + colors_rgb[1][2] * t_local)
+            if i < part1_end:
+                # Первая часть: градиент от белого к серебристому
+                t = i / max(1, part1_end - 1) if part1_end > 1 else 0
+                base = (255, 255, 255)  # белый
+                r = int(base[0] * (1 - t) + silver[0] * t)
+                g = int(base[1] * (1 - t) + silver[1] * t)
+                b = int(base[2] * (1 - t) + silver[2] * t)
+            elif i < part2_end:
+                # Вторая часть: градиент от светло-синего к синему
+                local_i = i - part1_end
+                local_n = part2_end - part1_end
+                t = local_i / max(1, local_n - 1) if local_n > 1 else 0
+                light_blue = (173, 216, 230)  # светло-голубой
+                r = int(light_blue[0] * (1 - t) + blue[0] * t)
+                g = int(light_blue[1] * (1 - t) + blue[1] * t)
+                b = int(light_blue[2] * (1 - t) + blue[2] * t)
             else:
-                t_local = (t - 0.5) * 2
-                r = int(colors_rgb[1][0] * (1 - t_local) + colors_rgb[2][0] * t_local)
-                g = int(colors_rgb[1][1] * (1 - t_local) + colors_rgb[2][1] * t_local)
-                b = int(colors_rgb[1][2] * (1 - t_local) + colors_rgb[2][2] * t_local)
+                # Третья часть: градиент от оранжевого к красному
+                local_i = i - part2_end
+                local_n = n - part2_end
+                t = local_i / max(1, local_n - 1) if local_n > 1 else 0
+                orange = (255, 165, 0)  # оранжевый
+                r = int(orange[0] * (1 - t) + red[0] * t)
+                g = int(orange[1] * (1 - t) + red[1] * t)
+                b = int(orange[2] * (1 - t) + red[2] * t)
             
             hex_color = f"#{r:02x}{g:02x}{b:02x}"
             color_array.append(hex_color)
         
         return {job: color_array[i] for i, job in enumerate(sorted_jobs)}
-    
+
     else:
         if n <= 10:
             base_colors = px.colors.qualitative.Plotly
@@ -63,7 +85,6 @@ def _create_color_map(job_ids: List[str], palette: str = "plotly") -> Dict[str, 
                 )
                 base_colors.append(hex_color)
         
-        print("\n\n\n\nJFJFJFJF\n\n\n\n\n")
         color_map = {}
         for i, job in enumerate(sorted_jobs):
             color_map[job] = base_colors[i % len(base_colors)]
@@ -137,8 +158,8 @@ def create_gantt_figure(
             tick0=0,
             dtick=dtick_y, # было 1
             showgrid=True,
-            autorange=True,
-            tickfont=dict(size=8)  
+            autorange="reversed",
+            tickfont=dict(size=8)
         ),
         dragmode="pan",
         hovermode="closest",
